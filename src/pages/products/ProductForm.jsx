@@ -85,11 +85,11 @@ export default function ProductForm({ product, onSave, onClose }) {
         await api.post('/products', fd);
       }
       setSuccess(product ? '✓ Producto actualizado correctamente' : '✓ Producto creado correctamente');
-      setTimeout(() => onSave(), 1200);
+      setTimeout(onSave, 1200);
     } catch (err) {
       if (!err.response || err.response.status < 400) {
         setSuccess(product ? '✓ Producto actualizado correctamente' : '✓ Producto creado correctamente');
-        setTimeout(() => onSave(), 1200);
+        setTimeout(onSave, 1200);
       } else {
         setError(err.response?.data?.message || 'Error al guardar');
       }
