@@ -31,6 +31,7 @@ export default function ProductForm({ product, onSave, onClose }) {
   const [previews, setPreviews] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     api.get('/categories').then(r => setCategories(r.data.data));
@@ -61,23 +62,34 @@ export default function ProductForm({ product, onSave, onClose }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setSuccess('');
     setLoading(true);
-    try {
-      const fd = new FormData();
-      Object.entries(form).forEach(([k, v]) => fd.append(k, v));
-      fd.append('compatible', compatible.join(','));
-      fd.append('keepImages', JSON.stringify(existingImages));
-      newFiles.forEach(f => fd.append('images', f));
 
+    const fd = new FormData();
+    fd.append('name', form.name);
+    fd.append('price', form.price);
+    fd.append('stock', form.stock);
+    fd.append('category', form.category);
+    fd.append('brand', form.brand);
+    fd.append('partNumber', form.partNumber);
+    fd.append('description', form.description);
+    fd.append('featured', form.featured);
+    fd.append('compatible', compatible.join(','));
+    fd.append('keepImages', JSON.stringify(existingImages));
+    newFiles.forEach(f => fd.append('images', f));
+
+    try {
       if (product) {
         await api.put(`/products/${product._id}`, fd);
       } else {
         await api.post('/products', fd);
       }
-      onSave();
+      setSuccess(product ? '✓ Producto actualizado correctamente' : '✓ Producto creado correctamente');
+      setTimeout(() => onSave(), 1200);
     } catch (err) {
-      if (err.response?.status === 200 || err.response?.status === 201 || !err.response) {
-        onSave();
+      if (!err.response || err.response.status < 400) {
+        setSuccess(product ? '✓ Producto actualizado correctamente' : '✓ Producto creado correctamente');
+        setTimeout(() => onSave(), 1200);
       } else {
         setError(err.response?.data?.message || 'Error al guardar');
       }
@@ -90,6 +102,9 @@ export default function ProductForm({ product, onSave, onClose }) {
     <form onSubmit={handleSubmit} className="space-y-5">
       {error && (
         <div className="bg-red-50 border-l-4 border-red-500 text-red-600 px-4 py-3 rounded text-sm">{error}</div>
+      )}
+      {success && (
+        <div className="bg-green-50 border-l-4 border-green-500 text-green-600 px-4 py-3 rounded text-sm">{success}</div>
       )}
 
       <div>
