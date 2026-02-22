@@ -78,7 +78,7 @@ export default function ProductForm({ product, onSave, onSaved, onClose, onCance
     const keepImagesData = existingImages.map(img => ({ url: img.url, filename: img.filename || '' }));
     console.log('keepImages:', JSON.stringify(keepImagesData));
     fd.append('keepImages', JSON.stringify(keepImagesData));
-    console.log('newFiles a enviar:', newFiles.length);
+    console.log('newFiles a enviar:', newFiles.length, newFiles.map(f => f.name + ' ' + f.size));
     newFiles.forEach(f => fd.append('images', f));
 
     try {
