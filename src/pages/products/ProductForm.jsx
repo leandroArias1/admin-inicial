@@ -34,13 +34,10 @@ export default function ProductForm({ product, onSave, onClose }) {
   const handleFiles = (e) => {
     const files = Array.from(e.target.files);
     setNewFiles(prev => [...prev, ...files]);
-    const newPreviews = files.map(f => URL.createObjectURL(f));
-    setPreviews(prev => [...prev, ...newPreviews]);
+    setPreviews(prev => [...prev, ...files.map(f => URL.createObjectURL(f))]);
   };
 
-  const removeExisting = (idx) => {
-    setExistingImages(prev => prev.filter((_, i) => i !== idx));
-  };
+  const removeExisting = (idx) => setExistingImages(prev => prev.filter((_, i) => i !== idx));
 
   const removeNew = (idx) => {
     setNewFiles(prev => prev.filter((_, i) => i !== idx));
@@ -67,15 +64,31 @@ export default function ProductForm({ product, onSave, onClose }) {
       fd.append('keepImages', JSON.stringify(existingImages));
       newFiles.forEach(f => fd.append('images', f));
 
+      let res;
       if (product) {
-        await api.put(`/products/${product._id}`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+        res = await api.put(`/products/${product._id}`, fd, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
       } else {
-        await api.post('/products', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+        res = await api.post('/products', fd, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
       }
-      onSave();
+      if (res.data.success) {
+        onSave();
+      } else {
+        setError(res.data.message || 'Error al guardar');
+      }
     } catch (err) {
+      const status = err.response?.status;
+      if (status === 200 || status === 201) {
+        onSave();
+        return;
+      }
       setError(err.response?.data?.message || 'Error al guardar');
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -84,13 +97,11 @@ export default function ProductForm({ product, onSave, onClose }) {
         <div className="bg-red-50 border-l-4 border-red-500 text-red-600 px-4 py-3 rounded text-sm">{error}</div>
       )}
 
-      {/* Nombre */}
       <div>
         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Nombre *</label>
         <input className="input w-full" value={form.name} onChange={e => setForm({...form, name: e.target.value})} required />
       </div>
 
-      {/* Precio + Stock */}
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Precio (ARS) *</label>
@@ -102,7 +113,6 @@ export default function ProductForm({ product, onSave, onClose }) {
         </div>
       </div>
 
-      {/* Categoría */}
       <div>
         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Categoría</label>
         <select className="input w-full" value={form.category} onChange={e => setForm({...form, category: e.target.value})}>
@@ -111,7 +121,6 @@ export default function ProductForm({ product, onSave, onClose }) {
         </select>
       </div>
 
-      {/* Marca + Nº parte */}
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Marca</label>
@@ -123,7 +132,6 @@ export default function ProductForm({ product, onSave, onClose }) {
         </div>
       </div>
 
-      {/* Descripción */}
       <div>
         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Descripción</label>
         <textarea className="input w-full h-20 resize-none" value={form.description} onChange={e => setForm({...form, description: e.target.value})} />
@@ -161,13 +169,12 @@ export default function ProductForm({ product, onSave, onClose }) {
         <label htmlFor="featured" className="text-sm text-gray-600">Producto destacado</label>
       </div>
 
-      {/* ── FOTOS ── */}
+      {/* Fotos */}
       <div>
         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
           Fotos del producto
         </label>
 
-        {/* Fotos existentes */}
         {existingImages.length > 0 && (
           <div className="mb-3">
             <p className="text-xs text-gray-400 mb-2">Fotos actuales:</p>
@@ -186,7 +193,6 @@ export default function ProductForm({ product, onSave, onClose }) {
           </div>
         )}
 
-        {/* Nuevas fotos preview */}
         {previews.length > 0 && (
           <div className="mb-3">
             <p className="text-xs text-gray-400 mb-2">Fotos nuevas:</p>
@@ -205,7 +211,6 @@ export default function ProductForm({ product, onSave, onClose }) {
           </div>
         )}
 
-        {/* Botón agregar fotos */}
         <label className="flex items-center gap-2 cursor-pointer w-fit">
           <div className="flex items-center gap-2 border-2 border-dashed border-gray-300 hover:border-amber-400
                           text-gray-400 hover:text-amber-500 rounded-xl px-4 py-3 transition-colors">
@@ -216,10 +221,9 @@ export default function ProductForm({ product, onSave, onClose }) {
           </div>
           <input type="file" multiple accept="image/*" className="hidden" onChange={handleFiles} />
         </label>
-        <p className="text-xs text-gray-400 mt-1">Podés agregar múltiples fotos. Máx 5MB por foto.</p>
+        <p className="text-xs text-gray-400 mt-1">Máx 5 fotos · 5MB por foto.</p>
       </div>
 
-      {/* Botones */}
       <div className="flex gap-3 pt-2">
         <button type="submit" disabled={loading}
           className="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-50">
