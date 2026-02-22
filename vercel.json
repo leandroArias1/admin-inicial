@@ -1,0 +1,13 @@
+{
+  "functions": {
+    "api/**": {
+      "maxDuration": 30
+    }
+  },
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/$1"
+    }
+  ]
+}
