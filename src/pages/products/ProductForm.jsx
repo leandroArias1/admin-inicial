@@ -18,7 +18,9 @@ export default function ProductForm({ product, onSave, onClose }) {
     featured: product?.featured || false,
   });
   const [compatible, setCompatible] = useState(
-    Array.isArray(product?.compatible) ? product.compatible.map(m => m.trim()).filter(Boolean) : []
+    Array.isArray(product?.compatible)
+      ? product.compatible.flatMap(m => m.replace(/[\[\]"]/g, '').split(',').map(s => s.trim())).filter(Boolean)
+      : []
   );
   const [categories, setCategories] = useState([]);
   const [existingImages, setExistingImages] = useState(product?.images || []);
