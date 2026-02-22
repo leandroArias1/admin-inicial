@@ -17,11 +17,14 @@ export default function ProductForm({ product, onSave, onClose }) {
     description: product?.description || '',
     featured: product?.featured || false,
   });
-  const [compatible, setCompatible] = useState(
-    Array.isArray(product?.compatible)
-      ? product.compatible.flatMap(m => m.replace(/[\[\]"]/g, '').split(',').map(s => s.trim())).filter(Boolean)
-      : []
-  );
+
+  const [compatible, setCompatible] = useState(() => {
+    if (!Array.isArray(product?.compatible)) return [];
+    return product.compatible
+      .flatMap(m => m.replace(/[\[\]"]/g, '').split(',').map(s => s.trim()))
+      .filter(Boolean);
+  });
+
   const [categories, setCategories] = useState([]);
   const [existingImages, setExistingImages] = useState(product?.images || []);
   const [newFiles, setNewFiles] = useState([]);
@@ -66,28 +69,18 @@ export default function ProductForm({ product, onSave, onClose }) {
       fd.append('keepImages', JSON.stringify(existingImages));
       newFiles.forEach(f => fd.append('images', f));
 
-      let res;
       if (product) {
-        res = await api.put(`/products/${product._id}`, fd, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
+        await api.put(`/products/${product._id}`, fd);
       } else {
-        res = await api.post('/products', fd, {
-          headers: { 'Content-Type': 'multipart/form-data' },
-        });
+        await api.post('/products', fd);
       }
-      if (res?.data?.success || res?.status === 200 || res?.status === 201) {
-        onSave();
-      } else {
-        setError(res.data.message || 'Error al guardar');
-      }
+      onSave();
     } catch (err) {
-      const status = err.response?.status;
-      if (status === 200 || status === 201) {
+      if (err.response?.status === 200 || err.response?.status === 201 || !err.response) {
         onSave();
-        return;
+      } else {
+        setError(err.response?.data?.message || 'Error al guardar');
       }
-      setError(err.response?.data?.message || 'Error al guardar');
     } finally {
       setLoading(false);
     }
@@ -139,7 +132,6 @@ export default function ProductForm({ product, onSave, onClose }) {
         <textarea className="input w-full h-20 resize-none" value={form.description} onChange={e => setForm({...form, description: e.target.value})} />
       </div>
 
-      {/* Modelos compatibles */}
       <div>
         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
           Modelos IVECO compatibles
@@ -163,7 +155,6 @@ export default function ProductForm({ product, onSave, onClose }) {
         )}
       </div>
 
-      {/* Destacado */}
       <div className="flex items-center gap-3">
         <input type="checkbox" id="featured" checked={form.featured}
           onChange={e => setForm({...form, featured: e.target.checked})}
@@ -171,7 +162,6 @@ export default function ProductForm({ product, onSave, onClose }) {
         <label htmlFor="featured" className="text-sm text-gray-600">Producto destacado</label>
       </div>
 
-      {/* Fotos */}
       <div>
         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
           Fotos del producto
