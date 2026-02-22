@@ -75,7 +75,7 @@ export default function ProductForm({ product, onSave, onSaved, onClose, onCance
     fd.append('description', form.description);
     fd.append('featured', form.featured);
     fd.append('compatible', compatible.join(','));
-    fd.append('keepImages', JSON.stringify(existingImages));
+    fd.append('keepImages', JSON.stringify(existingImages.map(img => ({ url: img.url, filename: img.filename }))));
     newFiles.forEach(f => fd.append('images', f));
 
     try {
