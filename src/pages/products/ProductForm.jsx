@@ -6,7 +6,7 @@ const IVECO_MODELS = [
   'Powerstar', 'Hi-Way', 'Hi-Road', 'Cursor', 'AT',
 ];
 
-export default function ProductForm({ product, onSave, onClose }) {
+export default function ProductForm({ product, onSave, onSaved, onClose, onCancel }) {
   const [form, setForm] = useState({
     name: product?.name || '',
     price: product?.price || '',
@@ -85,11 +85,11 @@ export default function ProductForm({ product, onSave, onClose }) {
         await api.post('/products', fd);
       }
       setSuccess(product ? '✓ Producto actualizado correctamente' : '✓ Producto creado correctamente');
-      setTimeout(onSave, 1200);
+      setTimeout(onSave || onSaved, 1200);
     } catch (err) {
       if (!err.response || err.response.status < 400) {
         setSuccess(product ? '✓ Producto actualizado correctamente' : '✓ Producto creado correctamente');
-        setTimeout(onSave, 1200);
+        setTimeout(onSave || onSaved, 1200);
       } else {
         setError(err.response?.data?.message || 'Error al guardar');
       }
@@ -236,7 +236,7 @@ export default function ProductForm({ product, onSave, onClose }) {
           className="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-50">
           {loading ? 'Guardando...' : product ? 'Guardar cambios' : 'Crear producto'}
         </button>
-        <button type="button" onClick={onClose}
+        <button type="button" onClick={onClose || onCancel}
           className="flex-1 border-2 border-gray-200 text-gray-500 font-semibold py-3 rounded-xl hover:border-gray-300 transition-colors">
           Cancelar
         </button>
